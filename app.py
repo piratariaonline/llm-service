@@ -3,6 +3,7 @@ import os
 import torch
 from fastapi import FastAPI, File, UploadFile, Depends, HTTPException, status, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 from transformers import pipeline, BlipProcessor, BlipForConditionalGeneration
 from PIL import Image
@@ -30,6 +31,14 @@ app = FastAPI()
 processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", use_fast=False)
 model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base").to("cpu")
 translator = pipeline("translation", model="Helsinki-NLP/opus-mt-tc-big-en-pt")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # trocar pelo domain do frontend depois
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
