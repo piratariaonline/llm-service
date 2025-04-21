@@ -8,14 +8,15 @@ from transformers import pipeline, BlipProcessor, BlipForConditionalGeneration
 from PIL import Image
 from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
+from typing import List
 
 
 SECRET_KEY = os.getenv("JWT_SECRET")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-EXPECTED_USERNAME = os.getenv("AUTH_USERNAME")
-EXPECTED_PASSWORD = os.getenv("AUTH_PASSWORD")
+API_USERNAME = os.getenv("AUTH_USERNAME")
+API_PASSWORD = os.getenv("AUTH_PASSWORD")
 
 class LoginRequest(BaseModel):
     username: str
@@ -40,15 +41,15 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        if payload.get("sub") != EXPECTED_USERNAME:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+        if payload.get("sub") != API_USERNAME:
+            raise HTTPException(status_code=401, detail="Autenticação inválida")
     except JWTError:
-        raise HTTPException(status_code=401, detail="Token is invalid or expired")
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
 
 @app.post("/login")
 async def login(credentials: LoginRequest):
-    if credentials.username != EXPECTED_USERNAME or credentials.password != EXPECTED_PASSWORD:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+    if credentials.username != API_USERNAME or credentials.password != API_PASSWORD:
+        raise HTTPException(status_code=401, detail="Usuario ou senha inválidos")
     token = create_access_token(data={"sub": credentials.username})
     return {"access_token": token, "token_type": "bearer"}
 
@@ -63,6 +64,26 @@ async def generate_caption(file: UploadFile = File(...), _: str = Depends(verify
 
     caption_pt = translator(f'>>pob<< {caption_en}', max_length=512)[0]['translation_text']
     return {"original": caption_en, "translated": caption_pt}
+
+@app.post("/batchcaption")
+async def generate_captions(files: List[UploadFile] = File(...), _: str = Depends(verify_token)):
+    results = []
+    images = []
+
+    for file in files[:4]:
+        image_bytes = await file.read()
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        images.append(image)
+
+    inputs = processor(images=images, return_tensors="pt", padding=True)
+    outputs = model.generate(**inputs)
+
+    for output in outputs:
+        caption_en = processor.decode(output, skip_special_tokens=True)
+        caption_pt = translator(f'>>pob<< {caption_en}', max_length=512)[0]['translation_text']
+        results.append({"original": caption_en, "translated": caption_pt})
+
+    return results
 
 @app.post("/translate")
 async def translate_text(request: TranslationRequest, _: str = Depends(verify_token)):
