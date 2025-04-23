@@ -1,11 +1,11 @@
 # LLM Service
 
-Backend de agentes especialistas, criado para o projeto (ALTomatic)[https://github.com/piratariaonline/bluesky-altomatic].
+Backend de agentes especialistas, criado para o projeto [ALTomatic](https://github.com/piratariaonline/bluesky-altomatic).
 
 Modelos usados:
-- **(Salesforce/blip-image-captioning-base)[https://huggingface.co/Salesforce/blip-image-captioning-base]:** para criação de descrição de imagens. Modelo leve que usa CPU ao invés de GPU. A saída é mais simplificada e sem detalhes, mas mantém o custo com processamento e RAM baixo, possibilitando uso dos *free tiers* de cloud.
+- **[Salesforce/blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base):** para criação de descrição de imagens. Modelo leve que usa CPU ao invés de GPU. A saída é mais simplificada e sem detalhes, mas mantém o custo com processamento e RAM baixo, possibilitando uso dos *free tiers* de cloud.
 
-- **(Helsinki-NLP/opus-mt-tc-big-en-pt)[https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-pt]:** para traduções inglês-português. O BLIP é treinado no idioma inglês, esse modelo traduz para 'por' ou 'pob'. Também bastante leve e com uma taxa decente de boas traduções. Possui um limite de 512 tokens (500~600 caracteres), mas é suficiente para a saída do BLIP.
+- **[Helsinki-NLP/opus-mt-tc-big-en-pt](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-pt):** para traduções inglês-português. O BLIP é treinado no idioma inglês, esse modelo traduz para 'por' ou 'pob'. Também bastante leve e com uma taxa decente de boas traduções. Possui um limite de 512 tokens (500~600 caracteres), mas é suficiente para a saída do BLIP.
 
 ## Recursos
 
