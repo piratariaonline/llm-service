@@ -54,6 +54,14 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
             raise HTTPException(status_code=401, detail="Autenticação inválida")
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido ou expirado")
+    
+# def translate_text_long(text, chunk_size=500):
+#     chunks = textwrap.wrap(text, chunk_size)
+#     translated_chunks = []
+#     for chunk in chunks:
+#         translated = translator(f">>pob<< {chunk}", max_length=512)[0]['translation_text']
+#         translated_chunks.append(translated)
+#     return " ".join(translated_chunks)
 
 @app.post("/login")
 async def login(credentials: LoginRequest):
@@ -68,7 +76,12 @@ async def generate_caption(file: UploadFile = File(...), _: str = Depends(verify
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
     inputs = processor(images=image, return_tensors="pt")
-    output = model.generate(**inputs)
+    output = model.generate(
+		**inputs,
+		max_length=360,       # Limite de caracteres
+		num_beams=5,          # Qualidade do retorno (gasta compute)
+		early_stopping=False   # Troca rapidez por precisão na inferência
+	)
     caption_en = processor.decode(output[0], skip_special_tokens=True)
 
     caption_pt = translator(f'>>pob<< {caption_en}', max_length=512)[0]['translation_text']
